@@ -1,14 +1,16 @@
 """共通テストフィクスチャとセットアップ"""
 
-import pytest
 from datetime import datetime
-from typing import Dict, Any
-from real_estate_mcp.models.property_model import Property, PropertyType
+from typing import Any, Dict
+
+import pytest
+
 from real_estate_mcp.models.investor_model import (
-    PersonalInvestor,
     InvestmentExperience,
-    RiskTolerance
+    PersonalInvestor,
+    RiskTolerance,
 )
+from real_estate_mcp.models.property_model import Property, PropertyType
 
 
 @pytest.fixture
@@ -95,5 +97,5 @@ def calculation_test_data() -> Dict[str, Dict[str, Any]]:
             "interest_rate": 0.02,
             "loan_period": 30,
             "down_payment": 10000000,
-        }
+        },
     }

@@ -9,6 +9,7 @@ __pycache__/
 
 # Virtualenv/Poetry
 .venv/
+poetry.lock
 
 # Test/coverage
 .pytest_cache/
@@ -28,4 +29,3 @@ config/settings.yaml
 # data/market/
 # data/properties/
 # data/templates/
-

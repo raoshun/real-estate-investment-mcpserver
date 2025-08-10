@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# VSCode
+.vscode/
+
+# Virtualenv/Poetry
+.venv/
+
+# Test/coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# その他
+*.log
+
+# データ・一時ファイル
+config/settings.yaml
+# data/配下は必要に応じて除外
+# data/market/
+# data/properties/
+# data/templates/
+

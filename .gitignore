@@ -29,3 +29,6 @@ config/settings.yaml
 # data/market/
 # data/properties/
 # data/templates/
+
+# Legacy
+real_estate_investment_mcp/

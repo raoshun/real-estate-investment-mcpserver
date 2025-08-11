@@ -1,6 +1,6 @@
 """個人投資家向け物件分析ツール"""
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from real_estate_mcp.utils.calculations import calculate_property_analysis
 
@@ -99,7 +99,6 @@ class PropertyAnalyzerTool:
             str: 推奨事項
         """
         gross_yield = analysis.get("gross_yield", 0)
-        net_yield = analysis.get("net_yield", 0)
         monthly_cashflow = analysis.get("monthly_cashflow", 0)
 
         if gross_yield >= 6.0:

@@ -1,8 +1,5 @@
 """計算ロジックのテスト"""
 
-import math
-
-import pytest
 
 from real_estate_mcp.utils.calculations import (
     calculate_gross_yield,
@@ -117,7 +114,7 @@ class TestBasicCalculations:
 class TestPropertyAnalysis:
     """総合物件分析のテスト"""
 
-    def test_calculate_property_analysis_basic(self, calculation_test_data):
+    def test_calculate_property_analysis_basic(self):
         """基本物件分析テスト"""
         property_data = {
             "purchase_price": 30000000,

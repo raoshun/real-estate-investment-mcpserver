@@ -1,7 +1,7 @@
 """共通テストフィクスチャとセットアップ"""
 
-from datetime import datetime
-from typing import Any  # noqa: F401
+
+from typing import Any, Dict
 
 import pytest
 

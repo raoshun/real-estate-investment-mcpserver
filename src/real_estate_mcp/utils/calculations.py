@@ -190,13 +190,16 @@ def calculate_property_analysis(
     # 年間賃料収入
     annual_rent = monthly_rent * occupancy_months
 
-    # 年間経費（デフォルトは購入価格の20%）
+    # 年間経費
+    # これまで: 購入価格 * 経費率 → リース実態と乖離し大きな赤字を生むケース多発
+    # 修正: 賃料収入ベース (annual_rent * rate)。明示指定 annual_expenses があれば優先。
     if "annual_expenses" in property_data:
         annual_expenses = property_data["annual_expenses"]
     else:
-        annual_expenses = purchase_price * property_data.get(
+        annual_expense_rate = property_data.get(
             "annual_expense_rate", DEFAULT_ANNUAL_EXPENSE_RATE
         )
+        annual_expenses = annual_rent * annual_expense_rate
 
     # 基本利回り計算
     gross_yield = calculate_gross_yield(annual_rent, purchase_price)

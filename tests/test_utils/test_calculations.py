@@ -120,6 +120,7 @@ class TestPropertyAnalysis:
             "purchase_price": 30000000,
             "monthly_rent": 120000,
             "occupancy_months_per_year": 12,
+            # 年間経費は賃料収入ベースで 13% 程度 (156,000円) を明示指定
             "annual_expenses": 156000,
             "loan_amount": 24000000,
             "interest_rate": 0.025,
@@ -187,3 +188,43 @@ class TestEdgeCases:
         result = calculate_gross_yield(1234567, 98765432)
         assert isinstance(result, float)
         assert len(str(result).split(".")[-1]) <= 10  # 小数点以下10桁以内
+
+
+class TestExpenseRateChange:
+    """経費率仕様変更 (購入価格ベース→賃料収入ベース) の検証"""
+
+    def test_expense_rate_applied_on_rent(self):
+        """annual_expense_rate が家賃収入に適用されることを検証"""
+        property_data = {
+            "purchase_price": 30000000,
+            "monthly_rent": 120000,  # 年 1,440,000
+            # 経費率 20% → 年間経費 288,000 (旧仕様なら 6,000,000 だった)
+            "annual_expense_rate": 0.20,
+            "loan_amount": 24000000,
+            "interest_rate": 0.025,
+            "loan_period": 25,
+        }
+
+        result = calculate_property_analysis(property_data)
+
+        # 実質利回り: (1,440,000 - 288,000)/30,000,000 *100 = 3.84%
+        assert abs(result["net_yield"] - 3.84) < 0.05
+        # 表面利回りは影響なし
+        assert result["gross_yield"] == 4.8
+        # 年間キャッシュフローは極端なマイナスにならない
+        assert result["annual_cashflow"] > -300000  # 旧仕様との差分検証
+
+    def test_expense_rate_with_no_loan(self):
+        """ローン無しで経費率が適用された場合の収益性"""
+        property_data = {
+            "purchase_price": 10000000,
+            "monthly_rent": 60000,  # 年 720,000
+            "annual_expense_rate": 0.15,  # 年間経費 108,000
+            # ローン無し (頭金 = 全額)
+            "loan_amount": 0,
+            "down_payment": 10000000,
+        }
+        result = calculate_property_analysis(property_data)
+        # キャッシュフローは (720,000 - 108,000)/12 = 51,000 近辺
+        assert result["monthly_cashflow"] > 40000
+        assert result["net_yield"] > 5.5

@@ -2,6 +2,7 @@
 """不動産投資分析MCPサーバー"""
 
 import asyncio
+import importlib.metadata
 import logging
 from typing import Any, Dict, List
 
@@ -178,9 +179,10 @@ class RealEstateMCPServer:
             resources: List[Resource] = []
             # AnyUrl バリデーション回避のため host を付与
             for property_id, property_obj in self.properties.items():
+                # AnyUrl: host にドットを含める (pydantic のバリデーション回避)
                 resources.append(
                     Resource(
-                        uri=f"property://local/{property_id}",
+                        uri=f"property://local.host/{property_id}",  # type: ignore[arg-type]
                         name=f"物件: {property_obj.name}",
                         description=f"物件ID {property_id} の詳細情報",
                         mimeType="application/json",
@@ -189,7 +191,7 @@ class RealEstateMCPServer:
             for investor_id, investor_obj in self.investors.items():
                 resources.append(
                     Resource(
-                        uri=f"investor://local/{investor_id}",
+                        uri=f"investor://local.host/{investor_id}",  # type: ignore[arg-type]
                         name="投資家プロファイル",
                         description=f"投資家ID {investor_id} のプロファイル",
                         mimeType="application/json",
@@ -198,15 +200,15 @@ class RealEstateMCPServer:
             return resources
 
         @self.server.read_resource()
-        async def read_resource(uri: str) -> str:  # noqa: D401
+        async def read_resource(uri):  # noqa: D401
             """リソース内容の読み取り"""
-            if uri.startswith("property://local/"):
-                property_id = uri.replace("property://local/", "")
+            if uri.startswith("property://local.host/"):
+                property_id = uri.replace("property://local.host/", "")
                 if property_id in self.properties:
                     return self.properties[property_id].model_dump_json(indent=2)
                 raise ValueError(f"Property not found: {property_id}")
-            if uri.startswith("investor://local/"):
-                investor_id = uri.replace("investor://local/", "")
+            if uri.startswith("investor://local.host/"):
+                investor_id = uri.replace("investor://local.host/", "")
                 if investor_id in self.investors:
                     return self.investors[investor_id].model_dump_json(indent=2)
                 raise ValueError(f"Investor not found: {investor_id}")
@@ -412,19 +414,72 @@ class RealEstateMCPServer:
             )
             total_annual_cashflow += analysis["annual_cashflow"]
 
-        result += f"📊 ポートフォリオサマリー\n"
+        result += "📊 ポートフォリオサマリー\n"
         result += f"・総投資額: {total_investment:,}円\n"
         result += f"・総月収: {total_monthly_rent:,}円\n"
         result += f"・総年間CF: {total_annual_cashflow:,}円\n"
-        result += f"・目標月収達成度: {(total_monthly_rent/investor.target_monthly_income)*100:.1f}%\n"
-
+        if investor.target_monthly_income:
+            result += (
+                "・目標月収達成度: "
+                f"{(total_monthly_rent/investor.target_monthly_income)*100:.1f}%\n"
+            )
         return result
 
-    async def run(self):  # noqa: D401
-        """MCPサーバーの起動 (シンプル run)"""
+    async def run(
+        self,
+        read_stream=None,
+        write_stream=None,
+        initialization_options=None,
+        *,
+        raise_exceptions: bool = False,
+        stateless: bool = False,
+    ) -> None:  # noqa: D401
+        """MCPサーバー起動ヘルパー。
+
+        mcp.Server.run は (read_stream, write_stream, initialization_options) を要求するため、
+        ここで stdio 用トランスポートを生成し InitializationOptions を組み立てて呼び出す。
+
+        任意でテスト用に既存の stream / options を受け取れるようにしている。
+        """
+        from mcp.server.models import InitializationOptions
+        from mcp.server.stdio import stdio_server
+        from mcp.types import ServerCapabilities
+
         logger.info("Real Estate Investment MCP Server starting...")
-        # ライブラリの run シグネチャに合わせて単純呼び出し
-        await self.server.run()
+
+        # InitializationOptions が未指定なら自動生成
+        if initialization_options is None:
+            try:
+                version = importlib.metadata.version("real-estate-investment-mcp")
+            except Exception:  # pragma: no cover - フォールバック
+                version = "0.0.0"
+            initialization_options = InitializationOptions(
+                server_name=self.server.name,
+                server_version=version,
+                capabilities=ServerCapabilities(),
+                instructions=("不動産投資物件の分析、比較、ポートフォリオ集計ツールを提供します。"),
+            )
+
+        # 既に stream が渡されている (例えばテスト) 場合はそのまま利用
+        if read_stream is not None and write_stream is not None:
+            await self.server.run(
+                read_stream,
+                write_stream,
+                initialization_options,
+                raise_exceptions=raise_exceptions,
+                stateless=stateless,
+            )
+            return
+
+        # stdio 経由で実行 (通常起動パス)
+        async with stdio_server() as (r, w):
+            await self.server.run(
+                r,
+                w,
+                initialization_options,
+                raise_exceptions=raise_exceptions,
+                stateless=stateless,
+            )
 
 
 # サーバー起動用の関数

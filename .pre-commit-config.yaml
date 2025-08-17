@@ -26,6 +26,16 @@ repos:
       - id: isort
         name: isort (python)
 
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.0.0
+    hooks:
+      - id: flake8
+        name: flake8
+        additional_dependencies: []
+        args:
+          - "--max-line-length=120"
+          - "--extend-ignore=E203"
+
   # Markdown Lint (Node 環境を pre-commit が自動生成)
   - repo: https://github.com/igorshubovych/markdownlint-cli
     rev: v0.41.0

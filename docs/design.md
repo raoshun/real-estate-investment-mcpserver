@@ -40,12 +40,32 @@
 - DEFAULT_ANNUAL_EXPENSE_RATE=0.20, DEFAULT_LOAN_RATIO=0.80, DEFAULT_INTEREST_RATE=0.025, DEFAULT_LOAN_PERIOD_YEARS=25, DEFAULT_OCCUPANCY_MONTHS=12
 - DEPRECIATION_YEARS: {'house':33,'apartment':22,'small_building':22}
 
-## MCPツール（tests/test_tools/test_property_analyzer.py）
+## MCPツール実装状況
+
+### 実装済 (server.py 登録)
+
+- analyze_property
+  - 入力: property_price, monthly_rent (+ 任意: loan_ratio, interest_rate, loan_period, annual_expense_rate, investor_tax_bracket など)
+  - 前処理: 百分率入力 (80 / 2.5) の自動正規化、loan_ratio から loan_amount 推定
+  - 出力: 整形テキスト（利回り / CF / 減価償却 / 税効果 / 推奨メッセージ）
+- register_property
+  - 入力: Property モデル準拠 JSON
+  - 動作: メモリ辞書へ保持（永続化未実装）
+- compare_properties
+  - 入力: property_ids[]
+  - 出力: 表面利回り降順ランキング（利回り / 月次CF / 回収期間）
+- portfolio_analysis
+  - 入力: investor_id (+ 任意 property_ids)
+  - 出力: 総投資額 / 総月収 / 年間CF / 目標達成度
+
+### 概念検証 (tests/test_tools/test_property_analyzer.py)
 
 - simple_property_analysis(params)
+  - 位置付け: 将来 `src/real_estate_mcp/tools/` へ移動予定の PoC クラス
   - 必須: property_price, monthly_rent
   - 任意: initial_cost, annual_expense_rate, loan_ratio, interest_rate, loan_period, investor_annual_income, investor_tax_bracket
-  - 出力: gross_yield, net_yield, monthly_cashflow, annual_cashflow, payback_period など
+  - 出力: gross_yield, net_yield, monthly_cashflow, annual_cashflow, payback_period, 推奨文 など (dict 形式)
+  - サーバー登録済ツールとの差異: 現在は JSON 構造体出力 / 内部で同じ計算ロジック利用
 
 ## エラーハンドリング/バリデーション
 
@@ -55,9 +75,10 @@
 
 ## テスト戦略
 
-- 単体テスト: 基本ケース/ゼロ・負・極端値/精度確認
-- ツールテスト: ハッピーパスと入力エラー
-- カバレッジ: addopts で HTML 出力、最低ラインは現状維持（約79%）
+- 単体テスト: 計算ロジック (正常 + ゼロ/負/極端値 + 精度)
+- ツール/サーバーテスト: 出力フォーマット・推奨メッセージ分岐・金利0% 等エッジ
+- PoC ツール: dict 形式出力の妥当性（将来統合時リグレッション防止）
+- カバレッジ: HTML 出力 (`htmlcov/`) を CI で生成（現状 ~80% 付近）
 
 ## 非機能
 

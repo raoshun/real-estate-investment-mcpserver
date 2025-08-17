@@ -25,3 +25,28 @@ repos:
     hooks:
       - id: isort
         name: isort (python)
+
+  # Markdown Lint (Node 環境を pre-commit が自動生成)
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.41.0
+    hooks:
+      - id: markdownlint
+        name: markdownlint
+        args:
+          - "--ignore"
+          - "htmlcov"
+          - "--disable"
+          - "MD013"  # 行長制限は README で緩和
+        # 任意で設定ファイルを置く場合は .markdownlint.json を作成
+
+  # Pylint (静的解析) - src 配下を対象
+  - repo: https://github.com/pycqa/pylint
+    rev: v3.2.7
+    hooks:
+      - id: pylint
+        name: pylint
+        args:
+          - "-j"
+          - "0"
+          - "src/real_estate_mcp"
+        additional_dependencies: []

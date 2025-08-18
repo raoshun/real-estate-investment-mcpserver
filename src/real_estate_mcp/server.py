@@ -4,7 +4,7 @@
 import asyncio
 import importlib.metadata
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from mcp.server import Server
 from mcp.types import Resource, TextContent, Tool
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 class RealEstateMCPServer:
     """不動産投資分析MCPサーバー"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.server = Server("real-estate-investment-mcp")
         self.properties: Dict[str, Property] = {}
         self.investors: Dict[str, PersonalInvestor] = {}
@@ -30,7 +30,7 @@ class RealEstateMCPServer:
         self._register_tools()
         self._register_resources()
 
-    def _register_tools(self):
+    def _register_tools(self) -> None:
         """MCPツールの登録"""
 
         @self.server.list_tools()
@@ -170,7 +170,7 @@ class RealEstateMCPServer:
             return await self._portfolio_analysis(arguments)
         return [TextContent(type="text", text=f"Unknown tool: {name}")]
 
-    def _register_resources(self):
+    def _register_resources(self) -> None:
         """MCPリソースの登録"""
 
         @self.server.list_resources()
@@ -200,7 +200,7 @@ class RealEstateMCPServer:
             return resources
 
         @self.server.read_resource()
-        async def read_resource(uri):  # noqa: D401
+        async def read_resource(uri: str) -> str:  # noqa: D401
             """リソース内容の読み取り"""
             if uri.startswith("property://local.host/"):
                 property_id = uri.replace("property://local.host/", "")
@@ -427,9 +427,9 @@ class RealEstateMCPServer:
 
     async def run(
         self,
-        read_stream=None,
-        write_stream=None,
-        initialization_options=None,
+        read_stream: Optional[Any] = None,
+        write_stream: Optional[Any] = None,
+        initialization_options: Optional[Any] = None,
         *,
         raise_exceptions: bool = False,
         stateless: bool = False,
@@ -483,7 +483,7 @@ class RealEstateMCPServer:
 
 
 # サーバー起動用の関数
-async def main():
+async def main() -> None:
     """メイン関数"""
     server = RealEstateMCPServer()
     await server.run()

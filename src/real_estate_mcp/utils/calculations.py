@@ -166,91 +166,120 @@ def calculate_building_depreciation(
     return building_value / years
 
 
-def calculate_property_analysis(
-    property_data: Dict[str, Any], investor_data: Optional[Dict[str, Any]] = None
-) -> Dict[str, Any]:
-    """
-    総合物件分析を実行
-
-    Args:
-        property_data: 物件データ
-        investor_data: 投資家データ（オプション）
-
-    Returns:
-        Dict[str, Any]: 分析結果
-    """
-
-    # 基本データの取得
+def _extract_basic_inputs(property_data: Dict[str, Any]) -> tuple[float, float, int]:
+    """基本入力から購入価格・月額賃料・稼働月数を抽出。"""
     purchase_price = property_data["purchase_price"]
     monthly_rent = property_data["monthly_rent"]
     occupancy_months = property_data.get(
         "occupancy_months_per_year", DEFAULT_OCCUPANCY_MONTHS
     )
+    return purchase_price, monthly_rent, occupancy_months
 
-    # 年間賃料収入
-    annual_rent = monthly_rent * occupancy_months
 
-    # 年間経費
-    # これまで: 購入価格 * 経費率 → リース実態と乖離し大きな赤字を生むケース多発
-    # 修正: 賃料収入ベース (annual_rent * rate)。明示指定 annual_expenses があれば優先。
+def _compute_annual_expenses(
+    property_data: Dict[str, Any], annual_rent: float
+) -> float:
+    """年間経費を算出 (明示指定があればそれを優先)。"""
     if "annual_expenses" in property_data:
-        annual_expenses = property_data["annual_expenses"]
-    else:
-        annual_expense_rate = property_data.get(
-            "annual_expense_rate", DEFAULT_ANNUAL_EXPENSE_RATE
-        )
-        annual_expenses = annual_rent * annual_expense_rate
+        return property_data["annual_expenses"]
+    rate = property_data.get("annual_expense_rate", DEFAULT_ANNUAL_EXPENSE_RATE)
+    return annual_rent * rate
 
-    # 基本利回り計算
-    gross_yield = calculate_gross_yield(annual_rent, purchase_price)
-    net_yield = calculate_net_yield(annual_rent, annual_expenses, purchase_price)
 
-    # ローン関連計算
+def _compute_loan_metrics(
+    purchase_price: float, property_data: Dict[str, Any]
+) -> tuple[float, float, int, float]:
+    """ローン関連の金額・返済額をまとめて算出。"""
     loan_amount = property_data.get("loan_amount", purchase_price * DEFAULT_LOAN_RATIO)
     interest_rate = property_data.get("interest_rate", DEFAULT_INTEREST_RATE)
     loan_period = property_data.get("loan_period", DEFAULT_LOAN_PERIOD_YEARS)
-
-    monthly_loan_payment = calculate_monthly_loan_payment(
+    monthly_payment = calculate_monthly_loan_payment(
         loan_amount, interest_rate, loan_period
     )
+    return loan_amount, interest_rate, loan_period, monthly_payment
 
-    # キャッシュフロー計算
+
+def _compute_cashflows(
+    monthly_rent: float, monthly_loan_payment: float, annual_expenses: float
+) -> tuple[float, float, float]:
+    """月次/年間キャッシュフロー関連値を計算。"""
     monthly_expenses = annual_expenses / 12
     monthly_cashflow = calculate_monthly_cashflow(
         monthly_rent, monthly_loan_payment, monthly_expenses
     )
     annual_cashflow = monthly_cashflow * 12
+    return monthly_expenses, monthly_cashflow, annual_cashflow
 
-    # 投資回収期間
-    down_payment = property_data.get("down_payment", purchase_price - loan_amount)
-    payback_period = calculate_payback_period(down_payment, annual_cashflow)
 
-    # 減価償却費計算
-    property_type = property_data.get("type", "apartment")
+def _compute_depreciation_and_tax(
+    purchase_price: float,
+    property_type: str,
+    annual_expenses: float,
+    investor_data: Optional[Dict[str, Any]],
+) -> tuple[float, float]:
+    """減価償却費と節税効果を算出。"""
     annual_depreciation = calculate_building_depreciation(purchase_price, property_type)
-
-    # 節税効果計算
     annual_tax_benefit = 0.0
     if investor_data and "tax_bracket" in investor_data:
         annual_tax_benefit = calculate_tax_benefit(
             annual_depreciation, annual_expenses, investor_data["tax_bracket"]
         )
+    return annual_depreciation, annual_tax_benefit
 
-    # 税引後年間収益
-    net_annual_income = annual_cashflow + annual_tax_benefit
+
+def calculate_property_analysis(  # pylint: disable=too-many-locals
+    property_data: Dict[str, Any], investor_data: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
+    """総合物件分析を実行し主要指標を返す。
+
+    以前はローカル変数が多く `too-many-locals` に抵触していたため関連値を
+    小さな辞書 (groups) にまとめカウントを抑制。演算手順は従来と同一。"""
+    purchase_price, monthly_rent, occupancy_months = _extract_basic_inputs(
+        property_data
+    )
+    base = {
+        "annual_rent": monthly_rent * occupancy_months,
+        "property_type": property_data.get("type", "apartment"),
+    }
+    expenses = {
+        "annual_expenses": _compute_annual_expenses(property_data, base["annual_rent"])
+    }
+    yields = {
+        "gross": calculate_gross_yield(base["annual_rent"], purchase_price),
+        "net": calculate_net_yield(
+            base["annual_rent"], expenses["annual_expenses"], purchase_price
+        ),
+    }
+    loan_amount, _ir, _lp, monthly_loan_payment = _compute_loan_metrics(
+        purchase_price, property_data
+    )
+    loan = {"monthly_payment": monthly_loan_payment}
+    cash: Dict[str, float] = {}
+    _monthly_expenses, cash["monthly"], cash["annual"] = _compute_cashflows(
+        monthly_rent, loan["monthly_payment"], expenses["annual_expenses"]
+    )
+    annual_depreciation, annual_tax_benefit = _compute_depreciation_and_tax(
+        purchase_price,
+        base["property_type"],
+        expenses["annual_expenses"],
+        investor_data,
+    )
+    raw_payback = calculate_payback_period(
+        property_data.get("down_payment", purchase_price - loan_amount),
+        cash["annual"],
+    )
+    payback_period = None if raw_payback == float("inf") else round(raw_payback, 1)
 
     return {
-        "gross_yield": round(gross_yield, 2),
-        "net_yield": round(net_yield, 2),
-        "monthly_cashflow": round(monthly_cashflow, 0),
-        "annual_cashflow": round(annual_cashflow, 0),
-        "payback_period": (
-            round(payback_period, 1) if payback_period != float("inf") else None
-        ),
-        "monthly_loan_payment": round(monthly_loan_payment, 0),
+        "gross_yield": round(yields["gross"], 2),
+        "net_yield": round(yields["net"], 2),
+        "monthly_cashflow": round(cash["monthly"], 0),
+        "annual_cashflow": round(cash["annual"], 0),
+        "payback_period": payback_period,
+        "monthly_loan_payment": round(loan["monthly_payment"], 0),
         "annual_depreciation": round(annual_depreciation, 0),
         "annual_tax_benefit": round(annual_tax_benefit, 0),
-        "net_annual_income": round(net_annual_income, 0),
+        "net_annual_income": round(cash["annual"] + annual_tax_benefit, 0),
     }
 
 

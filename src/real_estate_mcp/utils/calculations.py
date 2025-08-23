@@ -181,9 +181,9 @@ def _compute_annual_expenses(
 ) -> float:
     """年間経費を算出 (明示指定があればそれを優先)。"""
     if "annual_expenses" in property_data:
-        return property_data["annual_expenses"]
+        return float(property_data["annual_expenses"])
     rate = property_data.get("annual_expense_rate", DEFAULT_ANNUAL_EXPENSE_RATE)
-    return annual_rent * rate
+    return annual_rent * float(rate)
 
 
 def _compute_loan_metrics(

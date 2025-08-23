@@ -5,23 +5,23 @@ test:
 	poetry run pytest -v
 
 test-coverage:
-	pytest --cov=src --cov-report=html --cov-report=term-missing
+	poetry run pytest --cov=src --cov-report=html --cov-report=term-missing
 
 test-watch:
-	pytest-watch
+	poetry run pytest-watch
 
 # コード品質
 lint:
-	flake8 src tests
-	isort --check-only src tests
-	black --check src tests
+	poetry run flake8 src tests
+	poetry run isort --check-only src tests
+	poetry run black --check src tests
 
 format:
-	isort src tests
-	black src tests
+	poetry run isort src tests
+	poetry run black src tests
 
 type-check:
-	mypy src
+	poetry run mypy src
 
 # 環境構築
 setup:

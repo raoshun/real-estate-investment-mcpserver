@@ -18,6 +18,17 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Cache Poetry & virtualenv
+        uses: actions/cache@v4
+        with:
+          path: |
+            .venv
+            ~/.cache/pypoetry
+            ~/.cache/pip
+          key: ${{ runner.os }}-py311-poetry-${{ hashFiles('poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-py311-poetry-
+
       - name: Install Poetry
         uses: snok/install-poetry@v1
         with:
@@ -29,18 +40,17 @@ jobs:
         run: |
           poetry install
 
-      - name: Lint (Black & isort)
-        run: |
-          poetry run black --check .
-          poetry run isort --check-only .
+      - name: Cache pre-commit
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit
+          key: ${{ runner.os }}-precommit-${{ hashFiles('.pre-commit-config.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-precommit-
 
-      - name: Lint (flake8)
+      - name: Run pre-commit hooks (format / lint / misc checks)
         run: |
-          poetry run flake8 .
-
-      - name: Type check (mypy)
-        run: |
-          poetry run mypy src/real_estate_mcp
+          poetry run pre-commit run --all-files --show-diff-on-failure
 
       - name: Run tests & coverage
         run: |

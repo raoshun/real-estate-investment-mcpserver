@@ -12,6 +12,7 @@ DEFAULT_OCCUPANCY_MONTHS = 12
 
 # 法定耐用年数（建物種別）
 DEPRECIATION_YEARS = {
+    "rc": 47,  # RC造
     "house": 33,  # 木造住宅
     "apartment": 22,  # 鉄筋コンクリート住宅用
     "small_building": 22,
@@ -181,8 +182,9 @@ def _compute_annual_expenses(
 ) -> float:
     """年間経費を算出 (明示指定があればそれを優先)。"""
     if "annual_expenses" in property_data:
-        return property_data["annual_expenses"]
-    rate = property_data.get("annual_expense_rate", DEFAULT_ANNUAL_EXPENSE_RATE)
+        # property_data comes from untyped sources; ensure we return float
+        return float(property_data["annual_expenses"])
+    rate = float(property_data.get("annual_expense_rate", DEFAULT_ANNUAL_EXPENSE_RATE))
     return annual_rent * rate
 
 

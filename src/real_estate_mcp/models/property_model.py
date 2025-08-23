@@ -1,11 +1,47 @@
+"""物件データモデル。
+
+pydantic が無い静的解析 / lint 環境でも import-error を避けるためフォールバックを提供する。
+テスト/実行環境では本物の pydantic を利用する想定。
+
+R0801 duplicate-code: investor_model のフォールバックと意図的に類似。
+"""  # pylint: disable=duplicate-code
+
+import json
 from datetime import datetime
 from enum import Enum
-from typing import Optional
+from typing import Any, Dict, Optional
 
-from pydantic import BaseModel, Field
+try:  # pylint: disable=import-error
+    from pydantic import BaseModel, Field  # type: ignore
+except ImportError:  # pragma: no cover - lint 環境フォールバック
+
+    class BaseModel:  # type: ignore
+        """Fallback BaseModel (最小限: 値をそのまま属性化)"""
+
+        def __init__(self, **data: Any):
+            for k, v in data.items():
+                setattr(self, k, v)
+
+        def model_dump(self) -> Dict[str, Any]:  # 最小互換
+            """属性辞書を返す (最小互換)。"""
+            return self.__dict__
+
+        def model_dump_json(self, indent: int | None = None) -> str:  # type: ignore[override]
+            """JSON 文字列へシリアライズ (最小互換)。"""
+            return json.dumps(self.model_dump(), ensure_ascii=False, indent=indent)
+
+    from typing import cast
+
+    def Field(default: Any = ..., **_kwargs: Any) -> Any:  # type: ignore  # pylint: disable=invalid-name
+        """Fallback Field: 戻り値を Any とし必須指定でも型エラー回避。"""
+        if default is ...:
+            return cast(Any, None)
+        return default
 
 
 class PropertyType(str, Enum):
+    """物件種別列挙"""
+
     APARTMENT = "apartment"
     HOUSE = "house"
     SMALL_BUILDING = "small_building"

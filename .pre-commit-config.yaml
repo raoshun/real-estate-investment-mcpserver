@@ -32,9 +32,16 @@ repos:
       - id: flake8
         name: flake8
         additional_dependencies: []
+
+  # mypy (型チェック) - CI と同一設定をローカルにも反映
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.10.0
+    hooks:
+      - id: mypy
+        name: mypy
         args:
-          - "--max-line-length=120"
-          - "--extend-ignore=E203"
+          - "--config-file=pyproject.toml"
+        additional_dependencies: []
 
   # Markdown Lint (Node 環境を pre-commit が自動生成)
   - repo: https://github.com/igorshubovych/markdownlint-cli

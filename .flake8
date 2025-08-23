@@ -1,3 +1,5 @@
 [flake8]
 exclude = .venv,venv,__pycache__,.git
 max-line-length = 120
+# black との互換性 (スライスのコロン前後のスペース)
+extend-ignore = E203

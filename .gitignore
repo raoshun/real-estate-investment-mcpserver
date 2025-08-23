@@ -32,3 +32,6 @@ config/settings.yaml
 
 # Legacy
 real_estate_investment_mcp/
+
+# カバレッジ
+.coverage

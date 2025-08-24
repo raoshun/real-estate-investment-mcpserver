@@ -23,7 +23,7 @@ except ImportError:  # pragma: no cover
 class MarketDataClient:
     """市場データ取得クライアント"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         # aiohttp が無い環境では遅延エラーにする
         self.session: Optional["aiohttp.ClientSession"] = None  # type: ignore[name-defined]
         self.cache: Dict[str, Any] = {}
@@ -32,7 +32,7 @@ class MarketDataClient:
         # API設定の読み込み
         self.api_config = self._load_api_config()
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> "MarketDataClient":
         """非同期コンテキストマネージャーの開始"""
         # aiohttp が無くても read-only キャッシュ系メソッドは動かせるため graceful degrade
         if aiohttp is not None:  # type: ignore[name-defined]
@@ -42,7 +42,7 @@ class MarketDataClient:
             )
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         """非同期コンテキストマネージャーの終了"""
         if self.session:
             await self.session.close()
@@ -89,7 +89,7 @@ class MarketDataClient:
             },
         }
 
-    def _get_cache_key(self, method: str, **kwargs) -> str:
+    def _get_cache_key(self, method: str, **kwargs: Any) -> str:
         """キャッシュキーの生成"""
         params = "_".join(f"{k}:{v}" for k, v in sorted(kwargs.items()))
         return f"{method}_{hash(params)}"
@@ -114,7 +114,7 @@ class MarketDataClient:
         """地価公示データの取得"""
         cache_key = self._get_cache_key("land_price", address=address)
         if self._is_cache_valid(cache_key):  # 30日キャッシュ
-            return self.cache[cache_key]
+            return dict(self.cache[cache_key])
 
         try:
             result = await self._fetch_land_price_from_api(address)
@@ -208,7 +208,7 @@ class MarketDataClient:
         """エリア別利回り情報の取得"""
         cache_key = self._get_cache_key("area_yield", address=address)
         if self._is_cache_valid(cache_key):  # 7日キャッシュ
-            return self.cache[cache_key]
+            return float(self.cache[cache_key])
 
         try:
             yield_rate = await self._fetch_area_yield_from_sources(address)
@@ -220,8 +220,8 @@ class MarketDataClient:
             )
             for region, rate in default_rates.items():
                 if region in address:
-                    return rate
-            return default_rates.get("その他", 6.0)
+                    return float(rate)
+            return float(default_rates.get("その他", 6.0))
         self._set_cache(cache_key, yield_rate, hours=24 * 7)
         return yield_rate
 
@@ -264,7 +264,7 @@ class MarketDataClient:
             area=floor_area,
         )
         if self._is_cache_valid(cache_key):
-            return self.cache[cache_key]
+            return list(self.cache[cache_key])
 
         try:
             # 実際のAPIを使用した類似物件検索
@@ -352,7 +352,7 @@ class MarketDataClient:
             "market_trends", address=address, type=_property_type
         )
         if self._is_cache_valid(cache_key):
-            return self.cache[cache_key]
+            return dict(self.cache[cache_key])
 
         try:
             trends = await self._fetch_market_trends(address, _property_type)
@@ -456,7 +456,7 @@ class MarketDataClient:
 
 
 # 使用例とテスト用関数
-async def test_market_data_client():
+async def test_market_data_client() -> None:
     """MarketDataClientのテスト"""
     async with MarketDataClient() as client:
         # 地価データテスト

@@ -36,7 +36,7 @@ class PropertyPriceEstimator:
         else:  # pragma: no cover - fallback
 
             class _MissingGeocoder:  # pylint: disable=too-few-public-methods
-                def geocode(self, _address):  # noqa: D401 - simple stub
+                def geocode(self, _address: str) -> None:  # noqa: D401 - simple stub
                     """スタブ: geopy 未インストール時に呼ばれた場合は明示エラーを送出。"""
                     raise RuntimeError("geopy not installed")
 
@@ -51,7 +51,9 @@ class PropertyPriceEstimator:
         self.session = aiohttp.ClientSession()  # type: ignore[call-arg]
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:  # pragma: no cover
+    async def __aexit__(
+        self, exc_type: Any, exc_val: Any, exc_tb: Any
+    ) -> None:  # pragma: no cover
         """Async context exit: セッションをクローズ。"""
         if self.session:  # pragma: no branch - trivial
             await self.session.close()
@@ -287,7 +289,8 @@ class PropertyPriceEstimator:
             except (TypeError, ValueError):
                 return 0.0
         async with MarketDataClient() as client:
-            return await client.get_area_yield_rate(property_data.get("address", ""))
+            result = await client.get_area_yield_rate(property_data.get("address", ""))
+            return float(result)
 
     def _build_yield_scenarios(self, area_yield: float) -> Dict[str, float]:
         return {
@@ -328,11 +331,12 @@ class PropertyPriceEstimator:
             comparables = await client.search_comparable_sales(
                 lat, lon, property_type, building_age, floor_area
             )
-        return comparables
+        return list(comparables)
 
     async def _get_area_yield_rate(self, address: str) -> float:
         async with MarketDataClient() as client:
-            return await client.get_area_yield_rate(address)
+            result = await client.get_area_yield_rate(address)
+            return float(result)
 
     async def _market_trend_approach(
         self, property_data: Dict[str, Any]
@@ -388,9 +392,9 @@ class PropertyPriceEstimator:
         age_adjust = (comp_age - target_age) * 0.01
         adjusted *= 1 - age_adjust
         distance = comparable.get("distance", 500)
-        distance_factor = max(0.95, 1 - (distance / 1000) * 0.05)
+        distance_factor = max(0.95, 1 - (float(distance) / 1000) * 0.05)
         adjusted *= distance_factor
-        return adjusted
+        return float(adjusted)
 
     def _estimate_building_value(
         self, construction_year: int, floor_area: float, property_type: str
@@ -442,9 +446,9 @@ class PropertyPriceEstimator:
         if len(prices) >= 2:
             avg = sum(prices) / len(prices)
             var = sum((p - avg) ** 2 for p in prices) / len(prices)
-            cv = (var**0.5) / avg if avg else 0
+            cv = (var**0.5) / float(avg) if avg else 0
             score += max(0.0, 0.2 - cv * 0.5)
-        return min(score, 1.0)
+        return float(min(score, 1.0))
 
     def _generate_recommendations(
         self, results: Dict[str, Any], property_data: Dict[str, Any]

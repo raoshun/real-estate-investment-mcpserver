@@ -40,7 +40,7 @@ repos:
       - id: mypy
         name: mypy
         args:
-          - "--config-file=pyproject.toml"
+          - "--config-file=mypy.ini"
         additional_dependencies: []
 
   # Markdown Lint (Node 環境を pre-commit が自動生成)

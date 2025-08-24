@@ -1,8 +1,10 @@
-"""個人投資家向け物件分析ツール"""
+"""個人投資家向け物件分析ツールテスト."""
+# pylint: disable=too-few-public-methods,duplicate-code
 
 from typing import Any, Dict
 
 from real_estate_mcp.utils.calculations import calculate_property_analysis
+from tests.helpers.shared import INTEREST_RATE_SCHEMA, LOAN_PERIOD_SCHEMA
 
 
 class PropertyAnalyzerTool:
@@ -40,26 +42,20 @@ class PropertyAnalyzerTool:
             if params[field] <= 0:
                 raise ValueError(f"{field} must be greater than 0")
 
-        # デフォルト値の設定
-        property_price = params["property_price"]
-        monthly_rent = params["monthly_rent"]
+        # デフォルト値設定 & 物件データ構築（中間変数数を抑制）
         initial_cost = params.get("initial_cost", 0)
         annual_expense_rate = params.get("annual_expense_rate", 0.20)
         loan_ratio = params.get("loan_ratio", 0.80)
-        interest_rate = params.get("interest_rate", 0.025)
-        loan_period = params.get("loan_period", 25)
-
-        # 物件データの構築
-        loan_amount = property_price * loan_ratio
-        down_payment = property_price - loan_amount + initial_cost
-
+        property_price = params["property_price"]
         property_data = {
             "purchase_price": property_price,
-            "monthly_rent": monthly_rent,
-            "loan_amount": loan_amount,
-            "down_payment": down_payment,
-            "interest_rate": interest_rate,
-            "loan_period": loan_period,
+            "monthly_rent": params["monthly_rent"],
+            "loan_amount": property_price * loan_ratio,
+            "down_payment": property_price
+            - (property_price * loan_ratio)
+            + initial_cost,
+            "interest_rate": params.get("interest_rate", 0.025),
+            "loan_period": params.get("loan_period", 25),
             "annual_expense_rate": annual_expense_rate,
             "type": "apartment",  # デフォルト
         }
@@ -78,8 +74,8 @@ class PropertyAnalyzerTool:
         # 追加情報の付与
         analysis_result.update(
             {
-                "loan_amount": loan_amount,
-                "down_payment": down_payment,
+                "loan_amount": property_data["loan_amount"],
+                "down_payment": property_data["down_payment"],
                 "loan_to_price_ratio": loan_ratio * 100,
                 "analysis_date": "2025-01-01",  # 実際は現在日時
                 "recommendation": self._generate_recommendation(analysis_result),
@@ -102,17 +98,18 @@ class PropertyAnalyzerTool:
         monthly_cashflow = analysis.get("monthly_cashflow", 0)
 
         if gross_yield >= 6.0:
-            if monthly_cashflow > 0:
-                return "高利回りでキャッシュフロープラス。良い投資案件です。"
-            else:
-                return "高利回りですがキャッシュフロー要注意。運営費用を見直してください。"
-        elif gross_yield >= 4.0:
-            if monthly_cashflow >= 0:
-                return "標準的な利回り。安定した投資として検討できます。"
-            else:
-                return "利回りは標準的ですが、キャッシュフローが厳しいです。"
-        else:
-            return "低利回りです。他の物件との比較検討をお勧めします。"
+            return (
+                "高利回りでキャッシュフロープラス。良い投資案件です。"
+                if monthly_cashflow > 0
+                else "高利回りですがキャッシュフロー要注意。運営費用を見直してください。"
+            )
+        if gross_yield >= 4.0:
+            return (
+                "標準的な利回り。安定した投資として検討できます。"
+                if monthly_cashflow >= 0
+                else "利回りは標準的ですが、キャッシュフローが厳しいです。"
+            )
+        return "低利回りです。他の物件との比較検討をお勧めします。"
 
 
 # MCPツール登録用の関数
@@ -144,16 +141,8 @@ def create_property_analyzer_tools():
                         "description": "融資割合（0.0-1.0）",
                         "default": 0.80,
                     },
-                    "interest_rate": {
-                        "type": "number",
-                        "description": "金利（0.0-1.0）",
-                        "default": 0.025,
-                    },
-                    "loan_period": {
-                        "type": "integer",
-                        "description": "返済期間（年）",
-                        "default": 25,
-                    },
+                    "interest_rate": INTEREST_RATE_SCHEMA,
+                    "loan_period": LOAN_PERIOD_SCHEMA,
                 },
                 "required": ["property_price", "monthly_rent"],
             },

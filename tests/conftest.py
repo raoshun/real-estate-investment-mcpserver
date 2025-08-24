@@ -1,4 +1,5 @@
 """共通テストフィクスチャとセットアップ"""
+# pylint: disable=import-error,redefined-outer-name
 
 
 from typing import Any, Dict
@@ -11,6 +12,7 @@ from real_estate_mcp.models.investor_model import (
     RiskTolerance,
 )
 from real_estate_mcp.models.property_model import Property, PropertyType
+from tests.helpers.shared import DEFAULT_CALCULATION_CASES
 
 
 @pytest.fixture
@@ -70,32 +72,5 @@ def sample_investor(sample_investor_data) -> PersonalInvestor:
 @pytest.fixture
 def calculation_test_data() -> Dict[str, Dict[str, Any]]:
     """計算テスト用データ"""
-    return {
-        "basic_case": {
-            "purchase_price": 30000000,
-            "annual_rent": 1440000,  # 月12万 × 12ヶ月
-            "annual_expenses": 156000,  # 管理費8000 + 修繕5000) × 12 + 固定資産税12万 + 保険3万
-            "loan_amount": 24000000,
-            "interest_rate": 0.025,
-            "loan_period": 25,
-            "down_payment": 6000000,
-        },
-        "high_yield_case": {
-            "purchase_price": 20000000,
-            "annual_rent": 1800000,  # 月15万 × 12ヶ月
-            "annual_expenses": 200000,
-            "loan_amount": 16000000,
-            "interest_rate": 0.03,
-            "loan_period": 20,
-            "down_payment": 4000000,
-        },
-        "low_yield_case": {
-            "purchase_price": 50000000,
-            "annual_rent": 2400000,  # 月20万 × 12ヶ月
-            "annual_expenses": 400000,
-            "loan_amount": 40000000,
-            "interest_rate": 0.02,
-            "loan_period": 30,
-            "down_payment": 10000000,
-        },
-    }
+    # Use the shared canonical test cases to avoid duplicated literals across tests
+    return DEFAULT_CALCULATION_CASES.copy()

@@ -42,7 +42,7 @@ class TestPropertyPriceEstimator:
         }
 
     @pytest.mark.asyncio
-    async def test_estimate_price_basic(self, sample_property_data):
+    async def test_estimate_price_basic(self, sample_property_data) -> None:
         """複数手法 (比較+収益) 指定時の基本推定フロー動作を検証。"""
         async with PropertyPriceEstimator() as estimator:
             # モックを設定
@@ -79,7 +79,7 @@ class TestPropertyPriceEstimator:
                 assert 25000000 <= final_price <= 32000000  # 妥当な範囲
 
     @pytest.mark.asyncio
-    async def test_comparable_sales_approach(self, sample_property_data):
+    async def test_comparable_sales_approach(self, sample_property_data) -> None:
         """レガシー comparable パス (methods 未指定) の推定結果構造を検証。"""
         async with PropertyPriceEstimator() as estimator:
             # モックを設定
@@ -115,7 +115,7 @@ class TestPropertyPriceEstimator:
                 assert "price_range" in result
 
     @pytest.mark.asyncio
-    async def test_yield_based_approach(self, sample_property_data):
+    async def test_yield_based_approach(self, sample_property_data) -> None:
         """収益還元法のテスト"""
         async with PropertyPriceEstimator() as estimator:
             with patch.object(estimator, "_get_area_yield_rate") as mock_yield:
@@ -134,7 +134,7 @@ class TestPropertyPriceEstimator:
                 assert abs(result["estimated_price"] - expected_price) < 100000
 
     @pytest.mark.asyncio
-    async def test_insufficient_data_handling(self):
+    async def test_insufficient_data_handling(self) -> None:
         """データ不足時の処理テスト"""
         async with PropertyPriceEstimator() as estimator:
             # 住所のみの不完全なデータ
@@ -150,7 +150,7 @@ class TestPropertyPriceEstimator:
             assert yield_result["estimated_price"] is None
             assert "error" in yield_result
 
-    def test_price_adjustment_logic(self, sample_property_data):
+    def test_price_adjustment_logic(self, sample_property_data) -> None:
         """価格調整ロジックのテスト"""
         estimator = PropertyPriceEstimator()
 
@@ -171,7 +171,7 @@ class TestPropertyPriceEstimator:
         assert adjusted_price != comparable["price"]
         assert 20000000 <= adjusted_price <= 35000000
 
-    def test_confidence_score_calculation(self):
+    def test_confidence_score_calculation(self) -> None:
         """信頼度スコア計算のテスト"""
         estimator = PropertyPriceEstimator()
 
@@ -194,7 +194,7 @@ class TestMarketDataClient:
     """MarketDataClientのテストクラス"""
 
     @pytest.mark.asyncio
-    async def test_get_land_price_data(self):
+    async def test_get_land_price_data(self) -> None:
         """地価データ取得のテスト"""
         async with MarketDataClient() as client:
             # キャッシュをクリア
@@ -214,7 +214,7 @@ class TestMarketDataClient:
                 assert "source" in result
 
     @pytest.mark.asyncio
-    async def test_cache_mechanism(self):
+    async def test_cache_mechanism(self) -> None:
         """キャッシュ機能のテスト"""
         async with MarketDataClient() as client:
             address = "東京都港区"
@@ -233,7 +233,7 @@ class TestMarketDataClient:
                 assert mock_api.call_count == 0  # APIは呼ばれない
 
     @pytest.mark.asyncio
-    async def test_comparable_sales_generation(self):
+    async def test_comparable_sales_generation(self) -> None:
         """類似物件データ生成のテスト"""
         async with MarketDataClient() as client:
             comparables = await client.search_comparable_sales(
@@ -261,7 +261,7 @@ class TestMCPServerIntegration:
         return RealEstateMCPServer()
 
     @pytest.mark.asyncio
-    async def test_estimate_sale_price_tool_registered_property(self, server):
+    async def test_estimate_sale_price_tool_registered_property(self, server) -> None:
         """登録済み物件の売却価格推定ツールテスト"""
         # テスト用物件を登録
         test_property = {
@@ -313,7 +313,7 @@ class TestMCPServerIntegration:
             assert "収益還元法" in result_text
 
     @pytest.mark.asyncio
-    async def test_estimate_sale_price_tool_direct_data(self, server):
+    async def test_estimate_sale_price_tool_direct_data(self, server) -> None:
         """直接データ指定での売却価格推定ツールテスト"""
         arguments = {
             "property_data": {
@@ -346,7 +346,7 @@ class TestMCPServerIntegration:
             assert "48,000,000円" in result_text
 
     @pytest.mark.asyncio
-    async def test_parallel_api_calls(self, server):
+    async def test_parallel_api_calls(self, server) -> None:
         """並行API呼び出しのパフォーマンステスト"""
         import time
 
@@ -400,7 +400,7 @@ class TestMCPServerIntegration:
             assert "32,000,000円" in result[0].text
 
     @pytest.mark.asyncio
-    async def test_error_handling_robustness(self, server):
+    async def test_error_handling_robustness(self, server) -> None:
         """エラー処理の堅牢性テスト"""
         arguments = {
             "property_data": {"address": "無効な住所", "type": "invalid_type"},
@@ -421,7 +421,7 @@ class TestMCPServerIntegration:
 
 
 # 統合テスト用のヘルパー関数
-async def run_end_to_end_test():
+async def run_end_to_end_test() -> bool:
     """エンドツーエンドテスト"""
     from real_estate_mcp.server import RealEstateMCPServer
 
@@ -510,7 +510,7 @@ async def run_end_to_end_test():
 
 
 # パフォーマンステスト用の関数
-async def run_performance_test():
+async def run_performance_test() -> None:
     """パフォーマンステスト"""
     import time
 

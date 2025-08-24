@@ -1,0 +1,76 @@
+data_sources:
+  real_estate_portals:
+    suumo:
+      base_url: "https://suumo.jp/api"
+      api_key: "${SUUMO_API_KEY}"  # 環境変数から取得
+      rate_limit: 100  # requests per hour
+      enabled: false  # 実際のAPIキー取得後にtrue
+
+    athome:
+      base_url: "https://www.athome.co.jp/api"
+      api_key: "${ATHOME_API_KEY}"
+      rate_limit: 200
+      enabled: false
+
+    homes:
+      base_url: "https://www.homes.co.jp/api"
+      api_key: "${HOMES_API_KEY}"
+      rate_limit: 150
+      enabled: false
+
+  government_data:
+    land_price_api:
+      base_url: "https://www.land.mlit.go.jp/webland/api"
+      api_key: null  # 無料API
+      rate_limit: 1000
+      enabled: true
+
+    construction_statistics:
+      base_url: "https://www.e-stat.go.jp/api"
+      api_key: "${ESTAT_API_KEY}"
+      rate_limit: 500
+      enabled: false
+
+estimation_settings:
+  comparable_sales:
+    max_radius_meters: 1000
+    max_age_difference_years: 5
+    min_comparable_count: 3
+    price_adjustment_factors:
+      age_per_year: 0.01  # 1%/年の減価
+      distance_per_100m: 0.002  # 100m当たり0.2%減価
+      area_difference_threshold: 0.2  # 20%以上の面積差で調整
+
+  yield_estimation:
+    default_yield_rates:
+      "東京都": 4.5
+      "神奈川県": 5.0
+      "千葉県": 5.5
+      "埼玉県": 5.5
+      "大阪府": 5.5
+      "愛知県": 5.8
+      "福岡県": 6.2
+      "その他": 6.0
+
+    yield_adjustment_range: 0.5  # ±0.5%の幅でシナリオ分析
+
+  confidence_scoring:
+    weights:
+      comparable_method: 0.4
+      yield_method: 0.4
+      market_data_method: 0.2
+
+    confidence_thresholds:
+      high: 0.7
+      medium: 0.4
+      low: 0.0
+
+cache_settings:
+  comparable_sales_cache_hours: 24
+  land_price_cache_days: 30
+  area_yield_cache_days: 7
+
+logging:
+  api_calls: true
+  estimation_details: true
+  cache_hits: false

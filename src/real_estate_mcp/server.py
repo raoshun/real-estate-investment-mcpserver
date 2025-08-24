@@ -218,12 +218,12 @@ class RealEstateMCPServer:
             if uri_str.startswith("property://local.host/"):
                 property_id = uri_str.replace("property://local.host/", "")
                 if property_id in self.properties:
-                    return self.properties[property_id].model_dump_json(indent=2)
+                    return str(self.properties[property_id].model_dump_json(indent=2))
                 raise ValueError(f"Property not found: {property_id}")
             if uri_str.startswith("investor://local.host/"):
                 investor_id = uri_str.replace("investor://local.host/", "")
                 if investor_id in self.investors:
-                    return self.investors[investor_id].model_dump_json(indent=2)
+                    return str(self.investors[investor_id].model_dump_json(indent=2))
                 raise ValueError(f"Investor not found: {investor_id}")
             raise ValueError(f"Unknown resource URI: {uri_str}")
 

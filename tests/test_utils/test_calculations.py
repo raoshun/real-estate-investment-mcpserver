@@ -15,7 +15,7 @@ from real_estate_mcp.utils.calculations import (
 class TestBasicCalculations:
     """基本計算機能のテスト"""
 
-    def test_calculate_gross_yield_normal_case(self):
+    def test_calculate_gross_yield_normal_case(self) -> None:
         """表面利回り計算 - 正常ケース"""
         annual_rent = 1440000  # 年144万円
         purchase_price = 30000000  # 3000万円
@@ -24,12 +24,12 @@ class TestBasicCalculations:
         result = calculate_gross_yield(annual_rent, purchase_price)
         assert result == expected_yield
 
-    def test_calculate_gross_yield_zero_price(self):
+    def test_calculate_gross_yield_zero_price(self) -> None:
         """表面利回り計算 - 購入価格0の異常ケース"""
         result = calculate_gross_yield(1440000, 0)
         assert result == 0.0
 
-    def test_calculate_net_yield_normal_case(self):
+    def test_calculate_net_yield_normal_case(self) -> None:
         """実質利回り計算 - 正常ケース"""
         annual_rent = 1440000
         annual_expenses = 156000
@@ -39,7 +39,7 @@ class TestBasicCalculations:
         result = calculate_net_yield(annual_rent, annual_expenses, purchase_price)
         assert abs(result - expected_yield) < 0.01
 
-    def test_calculate_monthly_loan_payment_normal_case(self):
+    def test_calculate_monthly_loan_payment_normal_case(self) -> None:
         """月次ローン返済額計算 - 正常ケース"""
         loan_amount = 24000000
         interest_rate = 0.025
@@ -59,7 +59,7 @@ class TestBasicCalculations:
         )
         assert abs(result - expected_payment) < 1
 
-    def test_calculate_monthly_loan_payment_zero_interest(self):
+    def test_calculate_monthly_loan_payment_zero_interest(self) -> None:
         """月次ローン返済額計算 - 金利0%のケース"""
         loan_amount = 24000000
         interest_rate = 0.0
@@ -71,7 +71,7 @@ class TestBasicCalculations:
         )
         assert abs(result - expected_payment) < 1
 
-    def test_calculate_monthly_cashflow(self):
+    def test_calculate_monthly_cashflow(self) -> None:
         """月次キャッシュフロー計算"""
         monthly_rent = 120000
         monthly_loan_payment = 107000  # 概算値
@@ -83,7 +83,7 @@ class TestBasicCalculations:
         )
         assert result == expected_cashflow
 
-    def test_calculate_payback_period_positive_cashflow(self):
+    def test_calculate_payback_period_positive_cashflow(self) -> None:
         """投資回収期間計算 - 正のキャッシュフロー"""
         down_payment = 6000000
         annual_cashflow = 240000  # 年24万円
@@ -92,7 +92,7 @@ class TestBasicCalculations:
         result = calculate_payback_period(down_payment, annual_cashflow)
         assert result == expected_period
 
-    def test_calculate_payback_period_zero_cashflow(self):
+    def test_calculate_payback_period_zero_cashflow(self) -> None:
         """投資回収期間計算 - キャッシュフロー0（回収不能）"""
         down_payment = 6000000
         annual_cashflow = 0
@@ -100,7 +100,7 @@ class TestBasicCalculations:
         result = calculate_payback_period(down_payment, annual_cashflow)
         assert result == float("inf")
 
-    def test_calculate_tax_benefit(self):
+    def test_calculate_tax_benefit(self) -> None:
         """節税効果計算"""
         annual_depreciation = 900000  # 年90万円
         annual_expenses = 156000  # 年15.6万円
@@ -114,7 +114,7 @@ class TestBasicCalculations:
 class TestPropertyAnalysis:
     """総合物件分析のテスト"""
 
-    def test_calculate_property_analysis_basic(self):
+    def test_calculate_property_analysis_basic(self) -> None:
         """基本物件分析テスト"""
         property_data = {
             "purchase_price": 30000000,
@@ -150,7 +150,7 @@ class TestPropertyAnalysis:
         assert isinstance(result["monthly_cashflow"], (int, float))
         assert result["annual_tax_benefit"] > 0  # 節税効果あり
 
-    def test_calculate_property_analysis_without_investor(self):
+    def test_calculate_property_analysis_without_investor(self) -> None:
         """投資家データなしの分析テスト"""
         property_data = {
             "purchase_price": 30000000,
@@ -168,13 +168,13 @@ class TestPropertyAnalysis:
 class TestEdgeCases:
     """エッジケースのテスト"""
 
-    def test_negative_values_handling(self):
+    def test_negative_values_handling(self) -> None:
         """負の値に対する処理"""
         # 負の賃料（あり得ないが）
         result = calculate_gross_yield(-100000, 30000000)
         assert result < 0  # 負の利回り
 
-    def test_very_large_numbers(self):
+    def test_very_large_numbers(self) -> None:
         """非常に大きな数値の処理"""
         large_price = 1000000000000  # 1兆円
         large_rent = 1000000000  # 10億円/年
@@ -182,18 +182,18 @@ class TestEdgeCases:
         result = calculate_gross_yield(large_rent, large_price)
         assert result == 0.1  # 0.1%
 
-    def test_precision_handling(self):
+    def test_precision_handling(self) -> None:
         """精度の処理"""
         # 小数点以下の精度チェック
         result = calculate_gross_yield(1234567, 98765432)
         assert isinstance(result, float)
-        assert len(str(result).split(".")[-1]) <= 10  # 小数点以下10桁以内
+        assert len(str(result).rsplit(".", maxsplit=1)[-1]) <= 10  # 小数点以下10桁以内
 
 
 class TestExpenseRateChange:
     """経費率仕様変更 (購入価格ベース→賃料収入ベース) の検証"""
 
-    def test_expense_rate_applied_on_rent(self):
+    def test_expense_rate_applied_on_rent(self) -> None:
         """annual_expense_rate が家賃収入に適用されることを検証"""
         property_data = {
             "purchase_price": 30000000,
@@ -214,7 +214,7 @@ class TestExpenseRateChange:
         # 年間キャッシュフローは極端なマイナスにならない
         assert result["annual_cashflow"] > -300000  # 旧仕様との差分検証
 
-    def test_expense_rate_with_no_loan(self):
+    def test_expense_rate_with_no_loan(self) -> None:
         """ローン無しで経費率が適用された場合の収益性"""
         property_data = {
             "purchase_price": 10000000,

@@ -187,6 +187,7 @@ def _compute_annual_expenses(
     rate = float(property_data.get("annual_expense_rate", DEFAULT_ANNUAL_EXPENSE_RATE))
     return annual_rent * rate
 
+
 def _compute_loan_metrics(
     purchase_price: float, property_data: Dict[str, Any]
 ) -> tuple[float, float, int, float]:

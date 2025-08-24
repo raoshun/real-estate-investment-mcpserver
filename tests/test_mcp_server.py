@@ -1,3 +1,7 @@
+"""RealEstateMCPServer関連テスト群."""
+
+# pylint: disable=protected-access, import-error
+
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -13,14 +17,14 @@ class TestRealEstateMCPServer:
         """テスト用のRealEstateMCPServerインスタンスを返す"""
         return RealEstateMCPServer()
 
-    def test_server_initialization(self, server):
+    def test_server_initialization(self, server) -> None:
         """サーバー初期化テスト"""
         assert server is not None
         assert server.server.name == "real-estate-investment-mcp"
         assert len(server.properties) == 0
 
     @pytest.mark.asyncio
-    async def test_analyze_property_success(self, server):
+    async def test_analyze_property_success(self, server) -> None:
         """物件分析成功テスト"""
         tool_name = "analyze_property"
         arguments = {
@@ -54,7 +58,7 @@ class TestRealEstateMCPServer:
             assert "4.80%" in result_text
 
     @pytest.mark.asyncio
-    async def test_analyze__property_high_yield(self, server):
+    async def test_analyze__property_high_yield(self, server) -> None:
         """高利回り物件の分析テスト(9%利回り)"""
         tool_name = "analyze_property"
         arguments = {
@@ -84,7 +88,7 @@ class TestRealEstateMCPServer:
             assert "9.00%" in result_text  # 180万/2000万 = 9%
 
     @pytest.mark.asyncio
-    async def test_analyze_property_low_yield(self, server):
+    async def test_analyze_property_low_yield(self, server) -> None:
         """低利回り物件の分析テスト(3%利回り)"""
         tool_name = "analyze_property"
         arguments = {
@@ -114,7 +118,7 @@ class TestRealEstateMCPServer:
             assert "3.00%" in result_text  # 108万/3000万 = 3%
 
     @pytest.mark.asyncio
-    async def test_analyze_property_with_custom_parameters(self, server):
+    async def test_analyze_property_with_custom_parameters(self, server) -> None:
         """カスタムパラメータでの分析テスト"""
         arguments = {
             "property_price": 25000000,
@@ -132,7 +136,7 @@ class TestRealEstateMCPServer:
         assert "融資比率: 90%" in result_text
         assert "不動産投資分析結果" in result_text
 
-    def test_format_analysis_result_recommendation(self, server):
+    def test_format_analysis_result_recommendation(self, server) -> None:
         """推奨メッセージの生成テスト"""
         # 高利回り・プラスキャッシュフローのケース
         analysis = {
@@ -161,7 +165,7 @@ class TestServerIntegration:
     """統合テスト"""
 
     @pytest.mark.asyncio
-    async def test_real_calculation_accuracy(self):
+    async def test_real_calculation_accuracy(self) -> None:
         """実際の計算精度のテスト"""
         server = RealEstateMCPServer()
 
@@ -186,7 +190,7 @@ class TestServerIntegration:
         assert "月次ローン返済:" in result_text
 
     @pytest.mark.asyncio
-    async def test_edge_case_zero_interest(self):
+    async def test_edge_case_zero_interest(self) -> None:
         """金利0%のエッジケーステスト"""
         server = RealEstateMCPServer()
 
@@ -205,9 +209,9 @@ class TestServerIntegration:
 
 
 # 実行用のヘルパー関数
-def run_server_test():
+def run_server_test() -> int:
     """サーバーテストの実行"""
-    pytest.main([__file__, "-v"])
+    return pytest.main([__file__, "-v"])
 
 
 if __name__ == "__main__":

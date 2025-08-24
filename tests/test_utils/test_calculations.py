@@ -10,6 +10,7 @@ from real_estate_mcp.utils.calculations import (
     calculate_property_analysis,
     calculate_tax_benefit,
 )
+from tests.helpers.shared import DEFAULT_CALCULATION_CASES
 
 
 class TestBasicCalculations:
@@ -31,13 +32,16 @@ class TestBasicCalculations:
 
     def test_calculate_net_yield_normal_case(self) -> None:
         """実質利回り計算 - 正常ケース"""
-        annual_rent = 1440000
-        annual_expenses = 156000
-        purchase_price = 30000000
-        expected_yield = 4.28  # (1440000-156000)/30000000 * 100
 
-        result = calculate_net_yield(annual_rent, annual_expenses, purchase_price)
-        assert abs(result - expected_yield) < 0.01
+    # use canonical basic_case from shared fixtures
+    case = DEFAULT_CALCULATION_CASES["basic_case"]
+    annual_rent = case["monthly_rent"] * 12
+    annual_expenses = case["annual_expenses"]
+    purchase_price = case["purchase_price"]
+    expected_yield = (annual_rent - annual_expenses) / purchase_price * 100
+
+    result = calculate_net_yield(annual_rent, annual_expenses, purchase_price)
+    assert abs(result - expected_yield) < 0.01
 
     def test_calculate_monthly_loan_payment_normal_case(self) -> None:
         """月次ローン返済額計算 - 正常ケース"""
@@ -116,16 +120,16 @@ class TestPropertyAnalysis:
 
     def test_calculate_property_analysis_basic(self) -> None:
         """基本物件分析テスト"""
+        case = DEFAULT_CALCULATION_CASES["basic_case"]
         property_data = {
-            "purchase_price": 30000000,
-            "monthly_rent": 120000,
+            "purchase_price": case["purchase_price"],
+            "monthly_rent": case["monthly_rent"],
             "occupancy_months_per_year": 12,
-            # 年間経費は賃料収入ベースで 13% 程度 (156,000円) を明示指定
-            "annual_expenses": 156000,
-            "loan_amount": 24000000,
-            "interest_rate": 0.025,
-            "loan_period": 25,
-            "down_payment": 6000000,
+            "annual_expenses": case["annual_expenses"],
+            "loan_amount": case["loan_amount"],
+            "interest_rate": case["interest_rate"],
+            "loan_period": case["loan_period"],
+            "down_payment": case["down_payment"],
             "type": "apartment",
         }
 

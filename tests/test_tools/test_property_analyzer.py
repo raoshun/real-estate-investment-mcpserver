@@ -4,6 +4,7 @@
 from typing import Any, Dict
 
 from real_estate_mcp.utils.calculations import calculate_property_analysis
+from tests.helpers.shared import INTEREST_RATE_SCHEMA, LOAN_PERIOD_SCHEMA
 
 
 class PropertyAnalyzerTool:
@@ -140,16 +141,8 @@ def create_property_analyzer_tools():
                         "description": "融資割合（0.0-1.0）",
                         "default": 0.80,
                     },
-                    "interest_rate": {
-                        "type": "number",
-                        "description": "金利（0.0-1.0）",
-                        "default": 0.025,
-                    },
-                    "loan_period": {
-                        "type": "integer",
-                        "description": "返済期間（年）",
-                        "default": 25,
-                    },
+                    "interest_rate": INTEREST_RATE_SCHEMA,
+                    "loan_period": LOAN_PERIOD_SCHEMA,
                 },
                 "required": ["property_price", "monthly_rent"],
             },

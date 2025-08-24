@@ -33,7 +33,7 @@ repos:
         name: flake8
         additional_dependencies: []
 
-  # mypy (型チェック) - CI と同一設定をローカルにも反映
+  # mypy (型チェック) - use local mypy.ini and check package only
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.10.0
     hooks:
@@ -41,6 +41,9 @@ repos:
         name: mypy
         args:
           - "--config-file=mypy.ini"
+          - "-p"
+          - "real_estate_mcp"
+        pass_filenames: false
         additional_dependencies: []
 
   # Markdown Lint (Node 環境を pre-commit が自動生成)
@@ -54,7 +57,6 @@ repos:
           - "htmlcov"
           - "--disable"
           - "MD013"  # 行長制限は README で緩和
-        # 任意で設定ファイルを置く場合は .markdownlint.json を作成
 
   # Pylint (静的解析) - src 配下を対象
   - repo: https://github.com/pycqa/pylint
